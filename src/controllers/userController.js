@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import { connection } from '../database.js';
+import { mountAllUserUrls } from '../utils/userHelper.js'
 
 export async function createUser(req, res) {
   const user = req.body;
@@ -34,4 +35,30 @@ export async function getUser(req, res) {
     console.log(error);
     return res.sendStatus(500);
   }
+}
+
+export async function getUserUrls(req, res) {
+  const { id } = req.params
+
+  const { rows } = await connection.query(`
+    SELECT * FROM users u
+      LEFT JOIN "shortenedUrls" s ON s."userId" = u.id WHERE u.id = $1 GROUP BY u.id, s.id
+    `, [id])
+
+  if (rows.length === 0) return res.sendStatus(404)
+
+  console.log(rows)
+
+  const result = mountAllUserUrls(rows)
+
+  res.json(result).status(200);
+}
+
+export async function getUserRanking(req, res) {
+  const { rows } = await connection.query(`
+    SELECT u.id, u.name, COUNT(s.id) "linkCount", SUM(s."visitCount") "visitCount" FROM users u
+      LEFT JOIN "shortenedUrls" s ON s."userId" = u.id GROUP BY u.id ORDER BY "visitCount" LIMIT 10
+    `)
+
+    res.json(rows).status(200)
 }
