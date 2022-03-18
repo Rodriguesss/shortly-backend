@@ -13,6 +13,11 @@ export async function getUrl(req, res) {
       return res.sendStatus(404);
     }
 
+    await connection.query(`
+      UPDATE "shortenedUrls" 
+        set "visitCount" = "visitCount" + 1
+        where "shortUrl" = $1`, [shortUrl])
+
     //return res.json(rows[0]).status(200)
     return res.redirect(302, rows[0].url)
   } catch (error) {
