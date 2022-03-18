@@ -40,25 +40,33 @@ export async function getUser(req, res) {
 export async function getUserUrls(req, res) {
   const { id } = req.params
 
-  const { rows } = await connection.query(`
-    SELECT * FROM users u
+  try {
+    const { rows } = await connection.query(`
+    SELECT u.*, s.* FROM users u
       LEFT JOIN "shortenedUrls" s ON s."userId" = u.id WHERE u.id = $1 GROUP BY u.id, s.id
     `, [id])
 
-  if (rows.length === 0) return res.sendStatus(404)
+    if (rows.length === 0) return res.sendStatus(404)
 
-  console.log(rows)
+    const result = mountAllUserUrls(rows)
 
-  const result = mountAllUserUrls(rows)
-
-  res.json(result).status(200);
+    res.json(result).status(200);
+  } catch (error) {
+    console.error(error);
+    return res.sendStatus(500);
+  }
 }
 
 export async function getUserRanking(req, res) {
-  const { rows } = await connection.query(`
+  try {
+    const { rows } = await connection.query(`
     SELECT u.id, u.name, COUNT(s.id) "linkCount", SUM(s."visitCount") "visitCount" FROM users u
       LEFT JOIN "shortenedUrls" s ON s."userId" = u.id GROUP BY u.id ORDER BY "visitCount" LIMIT 10
     `)
 
     res.json(rows).status(200)
+  } catch (error) {
+    console.error(error);
+    return res.sendStatus(500);
+  }
 }

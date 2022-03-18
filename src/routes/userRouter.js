@@ -6,7 +6,7 @@ import userSchema from "../schemas/userSchema.js";
 
 const userRouter = Router();
 
-userRouter.post('/users', validateSchemaMiddleware(userSchema), createUser);
+userRouter.post('/', validateSchemaMiddleware(userSchema), createUser);
 userRouter.get('/', validateTokenMiddleware, getUser);
 userRouter.get('/ranking', getUserRanking);
 userRouter.get('/:id', getUserUrls);

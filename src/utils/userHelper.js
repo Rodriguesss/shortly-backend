@@ -5,7 +5,7 @@ export function mountAllUserUrls(rows) {
 
   let visitCountTotal = 0;
 
-  rows.forEach(({ shortUrl, url, visitCount, userId: id }) => {
+  rows.forEach(({ shortUrl, url, visitCount, id }) => {
     shortenedUrls.push({ id, shortUrl, url, visitCount })
     visitCountTotal += visitCount;
   })

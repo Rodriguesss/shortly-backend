@@ -4,15 +4,21 @@ import { connection } from '../database.js';
 export async function getUrl(req, res) {
   const { shortUrl } = req.params
 
-  const { rows } = await connection.query(`
-    SELECT id, "shortUrl", url FROM "shortenedUrls" where "shortUrl" = $1
-  `, [shortUrl])
+  try {
+    const { rows } = await connection.query(`
+      SELECT id, "shortUrl", url FROM "shortenedUrls" where "shortUrl" = $1
+    `, [shortUrl])
 
-  if (rows.length === 0) {
-    return res.sendStatus(404);
+    if (rows.length === 0) {
+      return res.sendStatus(404);
+    }
+
+    //return res.json(rows[0]).status(200)
+    return res.redirect(302, rows[0].url)
+  } catch (error) {
+    console.error(error);
+    return res.sendStatus(500);
   }
-
-  return res.json(rows[0]).status(200)
 }
 
 export async function createUrl(req, res) {
@@ -29,9 +35,9 @@ export async function createUrl(req, res) {
       VALUES ($1, $2, $3, $4)
     `, [shortUrl, url, 0, user.id])
 
-    res.json({shortUrl}).status(201);
+    res.json({ shortUrl }).status(201);
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res.sendStatus(500);
   }
 }
@@ -40,6 +46,8 @@ export async function deleteUrl(req, res) {
   const { id } = req.params;
 
   try {
+    if (id === 'null') return;
+
     const { user } = res.locals
 
     const { rows } = await connection.query(`
@@ -50,7 +58,7 @@ export async function deleteUrl(req, res) {
       return res.sendStatus(404);
     }
 
-    if (rows[0].users !== user.id) {
+    if (rows[0].userId !== user.id) {
       return res.sendStatus(401);
     }
 
@@ -60,6 +68,7 @@ export async function deleteUrl(req, res) {
 
     res.sendStatus(204);
   } catch (error) {
-
+    console.error(error);
+    return res.sendStatus(500);
   }
 }
